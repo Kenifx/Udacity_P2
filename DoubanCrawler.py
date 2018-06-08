@@ -1,9 +1,9 @@
-#coding=utf-8
+# -*- coding: utf-8 -*-
 import requests
 import bs4
 import urllib
 import expanddouban
-
+import codecs
 
 #create regions list
 region = [
@@ -30,5 +30,20 @@ def getMovieUrl(category, location):
 
 #print(getMovieUrl("剧情","美国"))
 
-html = expanddouban.getHtml(getMovieUrl("剧情","美国"))
+'''TASK 2'''
 
+with codecs.open('html.txt','w','utf-8') as f:
+    html = expanddouban.getHtml(getMovieUrl("剧情", "美国"))
+    f.write(html)
+
+#html = expanddouban.getHtml(getMovieUrl("剧情","美国"))
+
+'''TASK 3 任务3: 定义电影类'''
+class Movie:
+    def __init__(self, name, rate, location, category, info_link, cover_link):
+        self.name = name
+        self.rate = rate
+        self.location = location
+        self.category = category
+        self.info_link = info_link
+        self.cover_link = cover_link

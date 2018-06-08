@@ -1,4 +1,4 @@
-#coding=GB2312
+# -*- coding: utf-8 -*-
 from selenium import webdriver
 import time
 
@@ -24,6 +24,6 @@ def getHtml(url, loadmore = False, waittime = 2):
     return html
 
  #@for test
-url = "https://movie.douban.com/tag/#/?sort=S&range=9,10&tags=电影,剧情,美国"
-html = getHtml(url)
-print(html)
+#url = "https://movie.douban.com/tag/#/?sort=S&range=9,10&tags=鐢靛奖,鍓ф儏,缇庡浗"
+#html = getHtml(url)
+#print(html)
