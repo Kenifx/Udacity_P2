@@ -1,18 +1,7 @@
-import requests
-import bs4
-import expanddouban
-import codecs
+war_dict = {"China":2,"Usa":3,"Japan":1}
 
+#sort来找出每个分类下前3的
+war_dict_sorted = sorted(war_dict.items(), key=lambda x: x[1], reverse=True)
 
-
-url = 'https://movie.douban.com/tag/#/?sort=S&range=9,10&tags=电影,战争，美国'
-
-#with codecs.open('html_test.txt','w','utf-8') as f:
-html = expanddouban.getHtml(url)
-#f.write(html)
-soup = bs4.BeautifulSoup(html,"html.parser") #bs来解析拿到的html内容
-
-movie_list = soup.find(class_='list-wp')
-
-print(movie_list)
+print(war_dict_sorted[0][0])
 
