@@ -1,8 +1,12 @@
-war_dict = {"China":2,"Usa":3,"Japan":1}
+#encoding = utf-8
+import requests
+import bs4
+import expanddouban
 
-#sort来找出每个分类下前3的
-war_dict_sorted = sorted(war_dict.items(), key=lambda x: x[1], reverse=True)
+list1 = ['aa']
+list2 = ['b']
 
-print(war_dict_sorted[0][0])
+def output(list1,list2):
+    return "this is {}, this is {}".format(list1,list2)
 
-print(sum(war_dict.values()))
+print(output(list1,list2))

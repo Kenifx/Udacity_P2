@@ -3,15 +3,32 @@ import bs4
 import expanddouban
 import codecs
 import csv
+import urllib
 
 #@ kenif@163.com
 
-'''首先先定义一些后面要用到的list'''
+'''首先先定义一些后面要用到的list
+根据审阅建议，此处最好查询网页tag来获取地区。因为手动输入容易造成错误，也不方便后期维护'''
 # regions list
-locations = ['中国','大陆','美国','香港','台湾','日本','韩国','英国','法国','德国','意大利','西班牙','印度','泰国','俄罗斯','伊朗','加拿大','澳大利亚','爱尔兰','瑞典','巴西','丹麦']
-#locations = ['中国','美国','英国','日本']
-# category list
-#categories = ['剧情','喜剧','动作','爱情','科幻','悬疑','惊悚','恐怖','犯罪','同性','音乐','歌舞','传记','历史','战争','西部','奇幻','冒险','灾难','武侠','情色']
+#locations = ['中国','大陆','美国','香港','台湾','日本','韩国','英国','法国','德国','意大利','西班牙','印度','泰国','俄罗斯','伊朗','加拿大','澳大利亚','爱尔兰','瑞典','巴西','丹麦']
+
+#这里构建函数用来获取地区
+locations = []
+
+def getLocations():
+    url = 'https://movie.douban.com/tag/#/?sort=S&range=9,10&tags=电影'
+    html = expanddouban.getHtml(url, loadmore=False, waittime=2)
+    soup = bs4.BeautifulSoup(html,"html.parser")
+
+    content = soup.find(class_='tags').find(class_='category').next_sibling.next_sibling
+    for sibling in content:
+         location = sibling.find(class_='tag').get_text()
+         if location != '全部地区':
+             locations.append(location)
+
+#使用函数获得地区
+getLocations()
+
 
 # my favorite
 myFavCategory = ['战争','犯罪','科幻']
@@ -22,23 +39,20 @@ myFavCategory = ['战争','犯罪','科幻']
 return a string corresponding to the URL of douban movie lists given category and location.
 https://movie.douban.com/tag/#/?sort=S&range=9,10&tags=电影
 """
+#
+#def getMovieUrl(category, location):
+#    url = None
+#    base_url = "https://movie.douban.com/tag/"
+#    tag = "," + category + ',' +  location
+#    url = urllib.parse.urljoin(base_url,'#/?sort=S&range=9,10&tags=电影' + tag )
+#    return url
+
+#根据审阅建议，此处用format来简化构成url的语句
 def getMovieUrl(category, location):
-    url = None
-    base_url = "https://movie.douban.com/tag/"
-    tag = "," + category + ',' +  location
-    url = urllib.parse.urljoin(base_url,'#/?sort=S&range=9,10&tags=电影' + tag )
+    url = "https://movie.douban.com/tag/#/?sort=S&range=9,10&tags=电影,{},{}".format(category,location)
     return url
 
-#print(getMovieUrl("剧情","美国"))
 
-'''TASK 2
-
-with codecs.open('html.txt','w','utf-8') as f:
-    html = expanddouban.getHtml(getMovieUrl("剧情", "美国"))
-    f.write(html)
-'''
-
-#html = expanddouban.getHtml(getMovieUrl("剧情","美国"))
 
 '''TASK 3 任务3: 定义电影类'''
 class Movie:
@@ -55,7 +69,7 @@ class Movie:
 return a list of Movie objects with the given category and location.
 """
 def getMovies(category, location):
-    html = expanddouban.getHtml(getMovieUrl(category, location))
+    html = expanddouban.getHtml(getMovieUrl(category, location),loadmore= True, waittime = 2)
     soup = bs4.BeautifulSoup(html,"html.parser") #bs来解析拿到的html内容
 
     movies = soup.find(class_='list-wp')
@@ -65,17 +79,16 @@ def getMovies(category, location):
     info_links = []
     cover_links = []
 
-    #开始查找
     for movie in movies.find_all('a'):
         names.append(movie.find(class_="title").string)
         rates.append(movie.find(class_="rate").string)
         info_links.append(movie.get("href"))
         cover_links.append(movie.find("img").get("src"))
 
-    #存储查找到的电影
     movie_list = []
     for i in range(len(names)):
         movie_list.append(Movie(names[i],rates[i],location,category,info_links[i],cover_links[i]))
+
     return movie_list
     #电影存储完毕
 
@@ -90,7 +103,7 @@ for category in myFavCategory:
         movies += getMovies(category, location)
 
 #此前一直遇到gbk编码错误，所以在网上查找方法并询问其他人的建议，于是用codecs模组解决
-with open('movies.csv','w') as f:
+with codecs.open('movies.csv','w', 'utf_8_sig') as f:
     line = csv.writer(f)
     for movie in movies:
         line.writerow([movie.name, movie.rate, movie.location, movie.category, movie.info_link, movie.cover_link])
@@ -102,75 +115,62 @@ with open('movies.csv','w') as f:
 #统计每个类别的电影个数
 #统计每个类别每个地区的电影个数
 
-#先按category，统计每个category里的电影总数（用电影名字）
-#战争
-war_movie = []
-#科幻science fiction
-sf_movie = []
-#灾难
-criminal_movie = []
-#if movies.category == 灾难, disater_list +=
+
+#根据审阅建议，这里该用一个列表包含的列表来存储数据，而不是hard-code电影类型来获取
+movieByCategory = [[],[],[]]
 for movie in movies:
     for i in range(len(myFavCategory)):
-        if movie.category == '战争':
-            war_movie.append(movie)
-        elif movie.category == '科幻':
-            sf_movie.append(movie)
-        elif movie.category == '犯罪':
-            criminal_movie.append(movie)
+        if movie.category == myFavCategory[i]:
+            movieByCategory[i].append(movie)
 
-#创建dict给每个分类，然后对应国家和电影数量
-war_dict = {}
-sf_dict = {}
-criminal_dict = {}
 
-def countByLocation(war_movies,sf_movies,criminal_movies):
-    for movie in war_movies:
-        if movie.location not in war_dict:
-            war_dict[movie.location] = 1
+
+def countByLocation(movies):
+    movie_location_dict = {}
+    for movie in movies:
+        if movie.location not in movie_dict:
+            movie_location_dict[movie.location] = 1
         else:
-            war_dict[movie.location] += 1
+            movie_location_dict[movie.location] += 1
+    return movie_location_dict
 
-    for movie in sf_movies:
-        if movie.location not in sf_dict:
-            sf_dict[movie.location] = 1
+def countByCategory(movies):
+    movie_category_dict = {}
+    for movie in movies:
+        if movie.category not in movie_category_dict:
+            movie_category_dict[movie.category] = 1
         else:
-            sf_dict[movie.location] += 1
+            movie_category_dict[movie.category] += 1
+    return movie_category_dict
 
-    for movie in criminal_movies:
-        if movie.location not in criminal_dict:
-            criminal_dict[movie.location] =1
-        else:
-            criminal_dict[movie.location] += 1
-
-    return war_dict,sf_dict,criminal_dict
-
-countByLocation(war_movie,sf_movie,criminal_movie)
-
-#sort来找出每个分类, 后来最后一步用到里面top 3
-war_dict_sorted = sorted(war_dict.items(), key=lambda x: x[1], reverse=True)
-sf_dict_sorted = sorted(sf_dict.items(), key=lambda x: x[1], reverse=True)
-criminal_dict_sorted = sorted(criminal_dict.items(), key=lambda x: x[1], reverse=True)
+movie_location = [[],[],[]]
+for i in range(len(myFavCategory)):
+    movie_location[i] = countByLocation(movieByCategory[i])
 
 
+movie_category = [[],[],[]]
+for i in range(len(myFavCategory)):
+    movie_category[i] = countByCategory(movieByCategory[i])
+
+
+movie_location_sorted = [[],[],[]]
+for i in range(len(myFavCategory)):
+    movie_location_sorted[i] = sorted(movie_location[i].items(), key=lambda x: x[1], reverse=True)[:3]
+
+
+
+#顺序战争，犯罪，科幻
 with open("output.txt", "w", encoding='utf-8') as f:
-         f.write("在战争电影中，前三的国家分别是第一：{},占比 {:.2%}, 第二：{},占比 {:.2%}，第三：{},占比 {:.2%} \n".format(
-            war_dict_sorted[0][0],round(war_dict_sorted[0][1]/sum(war_dict.values()),4),
-            war_dict_sorted[1][0],round(war_dict_sorted[1][1]/sum(war_dict.values()),4),
-            war_dict_sorted[2][0],round(war_dict_sorted[2][1]/sum(war_dict.values()),4)
-         ))
-
-         f.write("在科幻电影中，前三的国家分别是第一：{},占比 {:.2%}, 第二：{},占比 {:.2%}，第三：{},占比 {:.2%} \n".format(
-             sf_dict_sorted[0][0], round(sf_dict_sorted[0][1] / sum(sf_dict.values()), 4),
-             sf_dict_sorted[1][0], round(sf_dict_sorted[1][1] / sum(sf_dict.values()), 4),
-             sf_dict_sorted[2][0], round(sf_dict_sorted[2][1] / sum(sf_dict.values()), 4)
-         ))
-         f.write("在犯罪电影中，前三的国家分别是第一：{},占比 {:.2%}, 第二：{},占比 {:.2%}，第三：{},占比 {:.2%} \n".format(
-            criminal_dict_sorted[0][0], round(criminal_dict_sorted[0][1] / sum(criminal_dict.values()), 4),
-            criminal_dict_sorted[1][0], round(criminal_dict_sorted[1][1] / sum(criminal_dict.values()), 4),
-            criminal_dict_sorted[2][0], round(criminal_dict_sorted[2][1] / sum(criminal_dict.values()), 4)
-
-         ))
-
+    for i in range(len(myFavCategory)):
+        f.write("在{}电影中，前三的国家分别是第一：{},占比 {:.2%}, 第二：{},占比 {:.2%}，第三：{},占比 {:.2%} \n".format(
+        myFavCategory[i],
+        movie_location_sorted[i][0],
+        round(movie_location[i][0] / movie_category[i][0]),
+        movie_location_sorted[i][1],
+        round(movie_location[i][1] / movie_category[i][1]),
+        movie_location_sorted[i][2],
+        round(movie_location[i][2] / movie_category[i][2])
+        )
+        )
 
 
