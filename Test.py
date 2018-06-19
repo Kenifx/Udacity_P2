@@ -1,12 +1,11 @@
-#encoding = utf-8
-import requests
-import bs4
-import expanddouban
+movie = {}
+movie["战争"] = 9
+movie["Fantasy"] = 8
 
-list1 = ['aa']
-list2 = ['b']
+category = ["战争"]
+movie_list = []
+movie_list.append(movie)
 
-def output(list1,list2):
-    return "this is {}, this is {}".format(list1,list2)
+print(movie)
 
-print(output(list1,list2))
+print(movie_list[0][category[0]])

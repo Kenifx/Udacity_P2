@@ -10,7 +10,8 @@ import urllib
 '''首先先定义一些后面要用到的list
 根据审阅建议，此处最好查询网页tag来获取地区。因为手动输入容易造成错误，也不方便后期维护'''
 # regions list
-#locations = ['中国','大陆','美国','香港','台湾','日本','韩国','英国','法国','德国','意大利','西班牙','印度','泰国','俄罗斯','伊朗','加拿大','澳大利亚','爱尔兰','瑞典','巴西','丹麦']
+#locations = ['美国','日本','英国','加拿大','法国']
+
 
 #这里构建函数用来获取地区
 locations = []
@@ -124,16 +125,17 @@ for movie in movies:
             movieByCategory[i].append(movie)
 
 
-
+#按location计算电影的数量
 def countByLocation(movies):
     movie_location_dict = {}
     for movie in movies:
-        if movie.location not in movie_dict:
+        if movie.location not in movie_location_dict:
             movie_location_dict[movie.location] = 1
         else:
             movie_location_dict[movie.location] += 1
     return movie_location_dict
 
+#按category来计算电影的数量
 def countByCategory(movies):
     movie_category_dict = {}
     for movie in movies:
@@ -143,33 +145,38 @@ def countByCategory(movies):
             movie_category_dict[movie.category] += 1
     return movie_category_dict
 
+#列表纪录三个category下，每个category里按location来计算的电影数量
 movie_location = [[],[],[]]
 for i in range(len(myFavCategory)):
     movie_location[i] = countByLocation(movieByCategory[i])
 
-
+#列表纪录三个类别的电影总数量
 movie_category = [[],[],[]]
 for i in range(len(myFavCategory)):
     movie_category[i] = countByCategory(movieByCategory[i])
 
-
+#print(movie_category)
+#排序找出top3
 movie_location_sorted = [[],[],[]]
 for i in range(len(myFavCategory)):
     movie_location_sorted[i] = sorted(movie_location[i].items(), key=lambda x: x[1], reverse=True)[:3]
 
+#print(movie_location_sorted)
 
+#print(movie_location_sorted[0][0][0])
+#print(movie_category[0][myFavCategory[0]])
 
 #顺序战争，犯罪，科幻
-with open("output.txt", "w", encoding='utf-8') as f:
+with codecs.open("output.txt", "w",'utf_8_sig') as f:
     for i in range(len(myFavCategory)):
         f.write("在{}电影中，前三的国家分别是第一：{},占比 {:.2%}, 第二：{},占比 {:.2%}，第三：{},占比 {:.2%} \n".format(
         myFavCategory[i],
-        movie_location_sorted[i][0],
-        round(movie_location[i][0] / movie_category[i][0]),
-        movie_location_sorted[i][1],
-        round(movie_location[i][1] / movie_category[i][1]),
-        movie_location_sorted[i][2],
-        round(movie_location[i][2] / movie_category[i][2])
+        movie_location_sorted[i][0][0],
+        round(movie_location_sorted[i][0][1] / movie_category[i][myFavCategory[i]],4),
+        movie_location_sorted[i][1][0],
+        round(movie_location_sorted[i][1][1] / movie_category[i][myFavCategory[i]],4),
+        movie_location_sorted[i][2][0],
+        round(movie_location_sorted[i][2][1] / movie_category[i][myFavCategory[i]],4)
         )
         )
 
